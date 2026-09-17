@@ -44,7 +44,23 @@ jobs:
 
           if on_resale is True:
               print("TICKET AVAILABLE")
-              raise SystemExit(10)
+              with open("ticket_available.txt", "w") as f:
+                  f.write("YES")
           else:
               print("NO TICKET AVAILABLE")
+              with open("ticket_available.txt", "w") as f:
+                  f.write("NO")
           PY
+
+          if [ "$(cat ticket_available.txt)" = "YES" ]; then
+            curl -s \
+              -H "Title: SEPHORiA London ticket available!" \
+              -H "Priority: max" \
+              -H "Tags: ticket" \
+              -d "A SEPHORiA London resale ticket is available. Tap here: https://widget.weezevent.com/ticket/resale-sephoria-london-2026?locale=en-gb" \
+              "https://ntfy.sh/PA1998-SepLDN"
+
+            echo "NTFY NOTIFICATION SENT"
+          else
+            echo "No notification needed."
+          fi
