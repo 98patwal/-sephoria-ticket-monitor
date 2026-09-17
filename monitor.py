@@ -9,7 +9,16 @@ last_available = False
 
 print("SEPHORiA monitor started")
 print("Checking every 10 seconds...")
-
+requests.post(
+    NTFY_URL,
+    data="TEST — SEPHORiA monitor is connected and notifications are working!".encode(),
+    headers={
+        "Title": "SEPHORiA monitor test",
+        "Priority": "high",
+        "Tags": "white_check_mark"
+    },
+    timeout=20
+)
 while True:
     try:
         response = requests.get(
