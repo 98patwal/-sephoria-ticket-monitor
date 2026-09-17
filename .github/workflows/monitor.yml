@@ -2,14 +2,13 @@ name: SEPHORiA Ticket Monitor
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "*/5 * * * *"
 
 jobs:
-  check:
+  inspect:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check Weezevent
+      - name: Inspect Weezevent
         run: |
           python - <<'PY'
           import requests
@@ -18,13 +17,15 @@ jobs:
 
           r = requests.get(
               url,
-              headers={"User-Agent": "Mozilla/5.0"},
+              headers={
+                  "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 Version/18.6 Mobile/15E148 Safari/604.1"
+              },
               timeout=30
           )
 
-          print("HTTP status:", r.status_code)
-          print("Response length:", len(r.text))
-
-          if r.status_code != 200:
-              raise Exception("Weezevent request failed")
+          print("STATUS:", r.status_code)
+          print("LENGTH:", len(r.text))
+          print("CONTENT TYPE:", r.headers.get("content-type"))
+          print()
+          print(r.text[:10000])
           PY
