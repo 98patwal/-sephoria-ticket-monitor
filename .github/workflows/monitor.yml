@@ -1,0 +1,30 @@
+name: SEPHORiA Ticket Monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Weezevent
+        run: |
+          python - <<'PY'
+          import requests
+
+          url = "https://widget.weezevent.com/ticket/resale-sephoria-london-2026?locale=en-gb"
+
+          r = requests.get(
+              url,
+              headers={"User-Agent": "Mozilla/5.0"},
+              timeout=30
+          )
+
+          print("HTTP status:", r.status_code)
+          print("Response length:", len(r.text))
+
+          if r.status_code != 200:
+              raise Exception("Weezevent request failed")
+          PY
