@@ -15,19 +15,36 @@ jobs:
             -H "Accept: application/json" \
             "https://api.weezevent.com/ticket/widgets/resale-sephoria-london-2026?locale=en-gb")
 
-          ON_RESALE=$(echo "$RESPONSE" | python -c "import sys,json; print(json.load(sys.stdin)['first_step']['data']['ticket-market-rates']['on_resale'])")
+          echo "$RESPONSE" > response.json
 
-          echo "ON_RESALE=$ON_RESALE"
+          python - <<'PY'
+          import json
 
-          if [ "$ON_RESALE" = "True" ]; then
-            echo "🚨 TICKET AVAILABLE — sending notification"
+          with open("response.json") as f:
+              data = json.load(f)
 
-            curl -s \
-              -H "Title: SEPHORiA London ticket available!" \
-              -H "Priority: max" \
-              -H "Tags: ticket" \
-              -d "A SEPHORiA London resale ticket is available. Tap to view: https://widget.weezevent.com/ticket/resale-sephoria-london-2026?locale=en-gb" \
-              "https://ntfy.sh/PA1998-SepLDN"
-          else
-            echo "No resale ticket available."
-          fi
+          def find_on_resale(obj):
+              if isinstance(obj, dict):
+                  for key, value in obj.items():
+                      if key == "on_resale":
+                          return value
+                      result = find_on_resale(value)
+                      if result is not None:
+                          return result
+              elif isinstance(obj, list):
+                  for item in obj:
+                      result = find_on_resale(item)
+                      if result is not None:
+                          return result
+              return None
+
+          on_resale = find_on_resale(data)
+
+          print("ON_RESALE:", on_resale)
+
+          if on_resale is True:
+              print("TICKET AVAILABLE")
+              raise SystemExit(10)
+          else:
+              print("NO TICKET AVAILABLE")
+          PY
