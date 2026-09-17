@@ -40,4 +40,4 @@ jobs:
 
 
           print("----- END RESPONSE -----")
-          PY
+print("VERSION: INVENTORY CHECK")
