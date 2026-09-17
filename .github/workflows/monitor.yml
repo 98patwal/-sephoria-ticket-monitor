@@ -6,20 +6,8 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
-
     steps:
       - name: Check resale inventory
         run: |
-          curl -s -D headers.txt \
-            -H "User-Agent: Mozilla/5.0" \
-            -H "Accept: application/json" \
-            "https://api.weezevent.com/ticket/widgets/resale-sephoria-london-2026?locale=en-gb" \
-            -o response.txt
-
-          echo "----- STATUS -----"
-          head -n 1 headers.txt
-
-          echo "----- INVENTORY RESPONSE -----"
-          cat response.txt
-
-          echo "----- END RESPONSE -----"
+          echo "Checking Weezevent..."
+          curl -s "https://api.weezevent.com/ticket/widgets/resale-sephoria-london-2026?locale=en-gb"
