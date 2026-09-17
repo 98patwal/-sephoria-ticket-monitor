@@ -8,42 +8,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Find API calls
+      - name: Set up browser
+        run: |
+          python -m pip install playwright
+          playwright install chromium
+
+      - name: Inspect Weezevent network
         run: |
           python - <<'PY'
-          import requests
-          import re
+          from playwright.sync_api import sync_playwright
 
-          url = "https://widget.weezevent.com/ticket/static/js/index-D9eAwfqC.js"
+          url = "https://widget.weezevent.com/ticket/resale-sephoria-london-2026?locale=en-gb"
 
-          r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=30)
+          with sync_playwright() as p:
+              browser = p.chromium.launch(headless=True)
+              page = browser.new_page()
 
-          print("STATUS:", r.status_code)
-          print("LENGTH:", len(r.text))
+              def request_handler(request):
+                  u = request.url
+                  if any(x in u.lower() for x in ["api", "ticket", "resale", "event"]):
+                      print("REQUEST:", request.method, u)
 
-          text = r.text
+              page.on("request", request_handler)
 
-          # Look only around occurrences of api.weezevent
-          matches = list(re.finditer("api.weezevent", text, re.I))
+              print("Loading Weezevent...")
+              page.goto(url, wait_until="networkidle", timeout=60000)
 
-          print("API REFERENCES FOUND:", len(matches))
+              print("Page loaded.")
+              print("TITLE:", page.title())
 
-          for i, m in enumerate(matches[:5]):
-              print("\n===== MATCH", i + 1, "=====")
-              start = max(0, m.start() - 300)
-              end = min(len(text), m.end() + 700)
-              print(text[start:end])
-
-          # Look for likely resale-related API paths
-          print("\n===== RESALE API REFERENCES =====")
-
-          for term in ["resale", "resale-sephoria", "ticket/resale"]:
-              matches = list(re.finditer(term, text, re.I))
-              print(term, ":", len(matches))
-
-              for m in matches[:3]:
-                  start = max(0, m.start() - 200)
-                  end = min(len(text), m.end() + 500)
-                  print(text[start:end])
-                  print("---")
+              browser.close()
           PY
