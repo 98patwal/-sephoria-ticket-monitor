@@ -4,40 +4,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  inspect:
+  check:
     runs-on: ubuntu-latest
 
     steps:
       - name: Check resale inventory
         run: |
-          python - <<'PY'
-          import requests
-          import json
+          curl -s -D headers.txt \
+            -H "User-Agent: Mozilla/5.0" \
+            -H "Accept: application/json" \
+            "https://api.weezevent.com/ticket/widgets/resale-sephoria-london-2026?locale=en-gb" \
+            -o response.txt
 
-          url = "https://api.weezevent.com/ticket/widgets/resale-sephoria-london-2026?locale=en-gb"
+          echo "----- STATUS -----"
+          head -n 1 headers.txt
 
-          r = requests.get(
-              url,
-              headers={
-                  "User-Agent": "Mozilla/5.0",
-                  "Accept": "application/json"
-              },
-              timeout=30
-          )
+          echo "----- INVENTORY RESPONSE -----"
+          cat response.txt
 
-          print("STATUS:", r.status_code)
-          print("CONTENT TYPE:", r.headers.get("content-type"))
-          print("LENGTH:", len(r.text))
-          print()
-          print("----- INVENTORY RESPONSE -----")
-
-          try:
-              data = r.json()
-              print(json.dumps(data, indent=2))
-          except Exception:
-              print(r.text)
-
-
-
-          print("----- END RESPONSE -----")
-print("VERSION: INVENTORY CHECK")
+          echo "----- END RESPONSE -----"
