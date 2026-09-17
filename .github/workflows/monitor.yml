@@ -8,25 +8,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Inspect Weezevent
+      - name: Find Weezevent API calls
         run: |
           python - <<'PY'
           import requests
+          import re
 
-          url = "https://widget.weezevent.com/ticket/resale-sephoria-london-2026?locale=en-gb"
+          js_url = "https://widget.weezevent.com/ticket/static/js/index-D9eAwfqC.js"
 
           r = requests.get(
-              url,
+              js_url,
               headers={
-                  "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1"
+                  "User-Agent": "Mozilla/5.0"
               },
               timeout=30
           )
 
           print("STATUS:", r.status_code)
           print("LENGTH:", len(r.text))
-          print("CONTENT TYPE:", r.headers.get("content-type"))
-          print("----- RESPONSE BODY -----")
-          print(r.text)
-          print("----- END RESPONSE BODY -----")
+          print("----- POSSIBLE API URLS -----")
+
+          urls = sorted(set(re.findall(r'https?[^"\'\\ ]+', r.text)))
+
+          for url in urls:
+              if "weezevent" in url.lower() or "api" in url.lower():
+                  print(url[:500])
+
+          print("----- SEARCH TERMS -----")
+
+          for term in ["resale", "ticket", "availability", "api.weezevent"]:
+              print()
+              print("###", term)
+
+              for match in re.finditer(term, r.text, re.IGNORECASE):
+                  start = max(0, match.start() - 250)
+                  end = min(len(r.text), match.end() + 500)
+                  print(r.text[start:end])
+                  print("---")
           PY
